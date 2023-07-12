@@ -27,10 +27,13 @@ macro_rules! tuple_impls {
                     let items = vec![
                         $(gen.subschema_for::<$name>()),+
                     ];
+                    let mut schema = SchemaObject::default();
+                    schema.subschemas().any_of = Some(items);
+                    let the_schema = Schema::Object(schema);
                     SchemaObject {
                         instance_type: Some(InstanceType::Array.into()),
                         array: Some(Box::new(ArrayValidation {
-                            items: Some(items.into()),
+                            items: Some(the_schema),
                             max_items: Some($len),
                             min_items: Some($len),
                             ..Default::default()
@@ -77,13 +80,13 @@ mod tests {
             Some(SingleOrVec::from(InstanceType::Array))
         );
         let array_validation = schema.array.unwrap();
-        assert_eq!(
-            array_validation.items,
-            Some(SingleOrVec::Vec(vec![
-                schema_for::<i32>(),
-                schema_for::<bool>()
-            ]))
-        );
+
+        let mut expected_items = SchemaObject::default();
+        expected_items.subschemas().any_of = Some(vec![schema_for::<i32>(), schema_for::<bool>()]);
+
+        let expected_items: Schema = expected_items.into();
+        assert_eq!(array_validation.items, Some(expected_items));
+
         assert_eq!(array_validation.max_items, Some(2));
         assert_eq!(array_validation.min_items, Some(2));
     }

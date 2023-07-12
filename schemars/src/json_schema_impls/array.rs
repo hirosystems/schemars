@@ -82,10 +82,11 @@ mod tests {
             Some(SingleOrVec::from(InstanceType::Array))
         );
         let array_validation = schema.array.unwrap();
-        assert_eq!(
-            array_validation.items,
-            Some(SingleOrVec::from(schema_for::<i32>()))
-        );
+        let mut expected_items = SchemaObject::default();
+        expected_items.subschemas().any_of = Some(vec![schema_for::<i32>()]);
+
+        let expected_items: Schema = expected_items.into();
+        assert_eq!(array_validation.items, Some(expected_items));
         assert_eq!(array_validation.max_items, Some(8));
         assert_eq!(array_validation.min_items, Some(8));
     }

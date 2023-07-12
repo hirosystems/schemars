@@ -85,6 +85,14 @@ impl From<bool> for Schema {
     }
 }
 
+impl From<Vec<Schema>> for Schema {
+    fn from(v: Vec<Schema>) -> Self {
+        let mut schema = SchemaObject::default();
+        schema.subschemas().any_of = Some(v);
+        schema.into()
+    }
+}
+
 /// The root object of a JSON Schema document.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 #[cfg_attr(feature = "impl_json_schema", derive(JsonSchema))]
@@ -416,7 +424,7 @@ pub struct ArrayValidation {
     ///
     /// See [JSON Schema 9.3.1.1. "items"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.1.1).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub items: Option<SingleOrVec<Schema>>,
+    pub items: Option<Schema>,
     /// The `additionalItems` keyword.
     ///
     /// See [JSON Schema 9.3.1.2. "additionalItems"](https://tools.ietf.org/html/draft-handrews-json-schema-02#section-9.3.1.2).

@@ -25,7 +25,7 @@ impl Visitor for MyVisitor {
 }
 ```
 */
-use crate::schema::{RootSchema, Schema, SchemaObject, SingleOrVec};
+use crate::schema::{RootSchema, Schema, SchemaObject};
 
 /// Trait used to recursively modify a constructed schema and its subschemas.
 pub trait Visitor {
@@ -77,7 +77,9 @@ pub fn visit_schema_object<V: Visitor + ?Sized>(v: &mut V, schema: &mut SchemaOb
     }
 
     if let Some(arr) = &mut schema.array {
-        visit_single_or_vec(v, &mut arr.items);
+        if let Some(items) = &mut arr.items {
+            visit_schema(v, items);
+        }
         visit_box(v, &mut arr.additional_items);
         visit_box(v, &mut arr.contains);
     }
@@ -107,18 +109,6 @@ fn visit_vec<V: Visitor + ?Sized>(v: &mut V, target: &mut Option<Vec<Schema>>) {
 fn visit_map_values<V: Visitor + ?Sized>(v: &mut V, target: &mut crate::Map<String, Schema>) {
     for s in target.values_mut() {
         v.visit_schema(s)
-    }
-}
-
-fn visit_single_or_vec<V: Visitor + ?Sized>(v: &mut V, target: &mut Option<SingleOrVec<Schema>>) {
-    match target {
-        None => {}
-        Some(SingleOrVec::Single(s)) => v.visit_schema(s),
-        Some(SingleOrVec::Vec(vec)) => {
-            for s in vec {
-                v.visit_schema(s)
-            }
-        }
     }
 }
 

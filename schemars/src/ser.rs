@@ -395,10 +395,14 @@ impl serde::ser::SerializeTuple for SerializeTuple<'_> {
 
     fn end(self) -> Result<Self::Ok, Self::Error> {
         let len = self.items.len().try_into().ok();
+
+        let mut item_schema = SchemaObject::default();
+        item_schema.subschemas().any_of = Some(self.items);
+
         let mut schema = SchemaObject {
             instance_type: Some(InstanceType::Array.into()),
             array: Some(Box::new(ArrayValidation {
-                items: Some(SingleOrVec::Vec(self.items)),
+                items: Some(item_schema.into()),
                 max_items: len,
                 min_items: len,
                 ..ArrayValidation::default()
